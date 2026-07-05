@@ -1,0 +1,89 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Global Safety Net (Pillar 1)
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Common Global Primitives (Pillar 3)
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    // Validation Blueprint for Problem Entity (Pillar 2 & 5)
+    function isValidProblem(data) {
+      return data.keys().hasAll(['id', 'userId', 'leetcodeId', 'problemTitle', 'difficulty', 'language', 'code', 'createdAt', 'lastReviewedAt', 'nextReviewAt', 'memoryStrength', 'voiceTranscript', 'structuredExplanation', 'keyIntuition', 'coreObservation', 'whyThisApproach', 'timeComplexity', 'timeComplexityExplanation', 'spaceComplexity', 'spaceComplexityExplanation', 'commonMistakes', 'similarProblems', 'interviewExplanation', 'animationType', 'animationData']) 
+        && data.keys().size() == 25
+        && isValidId(data.id)
+        && data.userId is string && data.userId.size() <= 128
+        && data.leetcodeId is string && data.leetcodeId.size() <= 16
+        && data.problemTitle is string && data.problemTitle.size() <= 200
+        && (data.difficulty == 'Easy' || data.difficulty == 'Medium' || data.difficulty == 'Hard')
+        && data.language is string && data.language.size() <= 64
+        && data.code is string && data.code.size() <= 100000
+        && data.createdAt is timestamp
+        && data.lastReviewedAt is timestamp
+        && data.nextReviewAt is timestamp
+        && data.memoryStrength is int && data.memoryStrength >= 0 && data.memoryStrength <= 100
+        && data.voiceTranscript is string && data.voiceTranscript.size() <= 5000
+        && data.structuredExplanation is string && data.structuredExplanation.size() <= 10000
+        && data.keyIntuition is string && data.keyIntuition.size() <= 5000
+        && data.coreObservation is string && data.coreObservation.size() <= 5000
+        && data.whyThisApproach is string && data.whyThisApproach.size() <= 5000
+        && data.timeComplexity is string && data.timeComplexity.size() <= 64
+        && data.timeComplexityExplanation is string && data.timeComplexityExplanation.size() <= 1000
+        && data.spaceComplexity is string && data.spaceComplexity.size() <= 64
+        && data.spaceComplexityExplanation is string && data.spaceComplexityExplanation.size() <= 1000
+        && data.commonMistakes is list && data.commonMistakes.size() <= 10
+        && data.similarProblems is list && data.similarProblems.size() <= 10
+        && data.interviewExplanation is string && data.interviewExplanation.size() <= 5000
+        && data.animationType is string && data.animationType.size() <= 64
+        && data.animationData is map;
+    }
+
+    // Rules for Problems Collection
+    match /problems/{problemId} {
+      allow get: if isSignedIn() && existing().userId == request.auth.uid;
+      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
+      
+      allow create: if isSignedIn() 
+        && isValidId(problemId)
+        && problemId == incoming().id
+        && isValidProblem(incoming())
+        && incoming().userId == request.auth.uid
+        && incoming().createdAt == request.time
+        && incoming().lastReviewedAt == request.time
+        && incoming().nextReviewAt == request.time;
+
+      allow update: if isSignedIn()
+        && isValidId(problemId)
+        && problemId == incoming().id
+        && isValidProblem(incoming())
+        && existing().userId == request.auth.uid
+        && incoming().userId == existing().userId
+        && incoming().createdAt == existing().createdAt
+        && (
+          // Allow rating updating / SRS metrics (Pillar 4)
+          incoming().diff(existing()).affectedKeys().hasOnly(['lastReviewedAt', 'nextReviewAt', 'memoryStrength'])
+        );
+
+      allow delete: if isSignedIn()
+        && isValidId(problemId)
+        && existing().userId == request.auth.uid;
+    }
+  }
+}

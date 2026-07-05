@@ -1,0 +1,6 @@
+{
+  "name": "CodeRecall AI",
+  "description": "An Intelligent LeetCode Memory Extension & Second Brain for Competitive Programmers",
+  "requestFramePermissions": ["microphone"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

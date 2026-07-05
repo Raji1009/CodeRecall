@@ -1,0 +1,44 @@
+{
+  "entities": {
+    "Problem": {
+      "title": "Problem",
+      "description": "A documented LeetCode problem package in the engineer's second brain.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "leetcodeId": { "type": "string" },
+        "problemTitle": { "type": "string" },
+        "difficulty": { "type": "string", "enum": ["Easy", "Medium", "Hard"] },
+        "language": { "type": "string" },
+        "code": { "type": "string" },
+        "tags": { "type": "array" },
+        "createdAt": { "type": "string" },
+        "lastReviewedAt": { "type": "string" },
+        "nextReviewAt": { "type": "string" },
+        "memoryStrength": { "type": "number" },
+        "voiceTranscript": { "type": "string" },
+        "structuredExplanation": { "type": "string" },
+        "keyIntuition": { "type": "string" },
+        "coreObservation": { "type": "string" },
+        "whyThisApproach": { "type": "string" },
+        "timeComplexity": { "type": "string" },
+        "timeComplexityExplanation": { "type": "string" },
+        "spaceComplexity": { "type": "string" },
+        "spaceComplexityExplanation": { "type": "string" },
+        "commonMistakes": { "type": "array" },
+        "similarProblems": { "type": "array" },
+        "interviewExplanation": { "type": "string" },
+        "animationType": { "type": "string" },
+        "animationData": { "type": "object" }
+      },
+      "required": ["id", "userId", "leetcodeId", "problemTitle", "difficulty", "language", "code"]
+    }
+  },
+  "firestore": {
+    "problems/{problemId}": {
+      "schema": "Problem",
+      "description": "Collection of LeetCode problem packages indexed by the user."
+    }
+  }
+}
